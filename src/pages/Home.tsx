@@ -28,6 +28,7 @@ export function Home() {
     const [searchTerm, setSearchTerm] = useState('')
     const [voteStats, setVoteStats] = useState<Record<string, number>>({}) // candidateId -> count
     const [winners, setWinners] = useState<Record<string, string>>({}) // categoryId -> candidateId (Winner)
+    const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
     // Device ID Management
     useEffect(() => {
@@ -126,9 +127,17 @@ export function Home() {
             localStorage.setItem('voterName', voterName.trim())
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#10b981', '#3b82f6'] })
             setSelectedCandidate(null)
-            alert(`Đã gửi bình chọn cho ${selectedCandidate.name}!`)
+            setNotification({
+                type: 'success',
+                message: `Đã cập nhật phiếu bầu cho ${selectedCandidate.name}!`
+            })
+            setTimeout(() => setNotification(null), 3000)
         } catch (error: any) {
-            alert(error.message || "Lỗi khi bình chọn")
+            setNotification({
+                type: 'error',
+                message: error.message || "Lỗi không xác định"
+            })
+            setTimeout(() => setNotification(null), 3000)
         } finally {
             setLoading(false)
         }
@@ -343,6 +352,39 @@ export function Home() {
                             </div>
                         </motion.div>
                     </div>
+                )}
+            </AnimatePresence>
+
+            {/* Notification Popup */}
+            <AnimatePresence>
+                {notification && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 50, scale: 0.9 }}
+                        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border border-white/10"
+                        style={{
+                            background: notification.type === 'success'
+                                ? 'linear-gradient(to right, rgba(16, 185, 129, 0.9), rgba(6, 95, 70, 0.9))'
+                                : 'linear-gradient(to right, rgba(239, 68, 68, 0.9), rgba(153, 27, 27, 0.9))'
+                        }}
+                    >
+                        <div className={`p-2 rounded-full ${notification.type === 'success' ? 'bg-white/20' : 'bg-white/10'}`}>
+                            {notification.type === 'success' ? <Trophy size={20} className="text-white" /> : <X size={20} className="text-white" />}
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-white text-lg leading-tight">
+                                {notification.type === 'success' ? 'Thành công!' : 'Lỗi!'}
+                            </h4>
+                            <p className="text-white/80 text-sm font-medium">{notification.message}</p>
+                        </div>
+                        <button
+                            onClick={() => setNotification(null)}
+                            className="ml-4 p-1 hover:bg-white/10 rounded-full transition-colors"
+                        >
+                            <X size={16} className="text-white/60" />
+                        </button>
+                    </motion.div>
                 )}
             </AnimatePresence>
 
