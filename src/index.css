@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gradient-to-br from-indigo-900 via-purple-900 to-black text-white min-h-screen font-sans;
+  }
+}
+
+.glass-panel {
+  @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-xl;
+}
+
+.card-hover {
+  @apply transition-transform hover:scale-105 active:scale-95 duration-200;
+}
