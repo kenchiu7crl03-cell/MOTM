@@ -25,10 +25,10 @@ export function Home() {
     const [voterName, setVoterName] = useState(localStorage.getItem('voterName') || '')
     const [loading, setLoading] = useState(false)
     const [votingOpen, setVotingOpen] = useState(true)
-    const [currentVotes, setCurrentVotes] = useState<Record<string, string>>({}) // categoryId -> candidateId
+    const [currentVotes, setCurrentVotes] = useState<Record<string, string>>({})
     const [searchTerm, setSearchTerm] = useState('')
-    const [voteStats, setVoteStats] = useState<Record<string, number>>({}) // candidateId -> count
-    const [winners, setWinners] = useState<Record<string, string>>({}) // categoryId -> candidateId
+    const [voteStats, setVoteStats] = useState<Record<string, number>>({})
+    const [winners, setWinners] = useState<Record<string, string>>({})
     const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
@@ -118,7 +118,7 @@ export function Home() {
         try {
             const deviceId = localStorage.getItem('deviceId')
             if (!deviceId) throw new Error("Lỗi thiết bị. Vui lòng thử lại!")
-            localStorage.setItem('voterName', voterName.trim()) // Save for next time
+            localStorage.setItem('voterName', voterName.trim())
 
             const { error } = await supabase.from('votes').upsert({
                 voter_name: voterName.trim(),
@@ -150,25 +150,19 @@ export function Home() {
     }
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white font-['Inter'] selection:bg-emerald-500 selection:text-black overflow-x-hidden">
-            {/* Animated Background Orbs */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-500/10 rounded-full blur-[120px] animate-pulse" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }} />
-            </div>
-
+        <div className="min-h-screen bg-transparent text-white font-sans selection:bg-emerald-500 selection:text-black overflow-x-hidden">
             <header className="text-center py-12 relative z-10 px-4">
                 <motion.div
                     initial={{ y: -20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className="inline-flex items-center justify-center px-4 py-1.5 mb-6 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-2xl"
+                    className="inline-flex items-center justify-center px-4 py-1.5 mb-6 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-lg"
                 >
-                    <Trophy className="w-4 h-4 text-emerald-400 mr-2" />
-                    <span className="text-[10px] font-black tracking-[0.3em] uppercase text-emerald-400/80">Premium Voting System</span>
+                    <Trophy className="w-4 h-4 text-yellow-400 mr-2" />
+                    <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/80">Official Voting</span>
                 </motion.div>
 
-                <h1 className="text-5xl md:text-8xl font-black italic tracking-tighter font-['Outfit'] leading-none">
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-emerald-400 to-blue-500 drop-shadow-[0_0_30px_rgba(16,185,129,0.3)]">
+                <h1 className="text-5xl md:text-8xl font-black italic tracking-tighter leading-none">
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 via-cyan-400 to-blue-500 drop-shadow-2xl">
                         MAN OF THE MATCH
                     </span>
                 </h1>
@@ -177,35 +171,29 @@ export function Home() {
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="mt-10 max-w-2xl mx-auto p-1 rounded-[2.5rem] bg-gradient-to-r from-yellow-500/50 via-orange-500/50 to-yellow-500/50 shadow-[0_0_50px_rgba(234,179,8,0.2)]"
+                        className="mt-10 max-w-2xl mx-auto p-6 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-3xl border border-yellow-500/30 backdrop-blur-xl shadow-[0_0_30px_rgba(234,179,8,0.2)]"
                     >
-                        <div className="p-8 bg-[#0a0a0a] rounded-[2.4rem] backdrop-blur-3xl">
-                            <h2 className="text-3xl font-black text-yellow-400 uppercase tracking-tighter font-['Outfit'] mb-2 flex items-center justify-center gap-3">
-                                <Trophy className="w-10 h-10" /> KẾT QUẢ CHÍNH THỨC
-                            </h2>
-                            <p className="text-white/60 font-medium">Cổng bình chọn đã đóng. Dưới đây là bảng xếp hạng cuối cùng.</p>
-                        </div>
+                        <h2 className="text-3xl font-black text-yellow-400 uppercase tracking-widest mb-2 flex items-center justify-center gap-2">
+                            <Trophy className="w-10 h-10" /> KẾT QUẢ CHÍNH THỨC
+                        </h2>
+                        <p className="text-white/70">Bình chọn đã kết thúc. Xin chúc mừng các cầu thủ chiến thắng!</p>
                     </motion.div>
                 ) : (
                     <div className="mt-10 max-w-xl mx-auto sticky top-6 z-40 px-4">
                         <div className="relative group">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-blue-600 rounded-2xl blur opacity-25 group-focus-within:opacity-50 transition duration-1000"></div>
-                            <div className="relative">
-                                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-white/30 text-xl">🔍</span>
-                                <input
-                                    type="text"
-                                    placeholder="Tìm tên hoặc số áo cầu thủ..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full bg-black/80 backdrop-blur-2xl border border-white/10 rounded-2xl py-5 pl-14 pr-6 text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-500/50 shadow-2xl transition-all font-medium text-lg"
-                                />
-                            </div>
+                            <input
+                                type="text"
+                                placeholder="🔍 Tìm tên hoặc số áo cầu thủ..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full bg-black/60 backdrop-blur-md border border-white/20 rounded-full py-4 px-8 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xl transition-all"
+                            />
                         </div>
                     </div>
                 )}
             </header>
 
-            <div className="max-w-6xl mx-auto space-y-20 relative z-10 px-4 pb-20">
+            <div className="max-w-6xl mx-auto space-y-16 relative z-10 px-4 pb-20">
                 {categories.map((cat) => {
                     const filteredCandidates = candidates.filter(c =>
                         c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -220,27 +208,18 @@ export function Home() {
                     const isExpanded = expandedCategory === cat.id || searchTerm.length > 0
 
                     return (
-                        <section key={cat.id} className="relative">
+                        <section key={cat.id} className="relative group bg-white/5 border border-white/10 rounded-3xl overflow-hidden transition-all hover:border-white/20">
                             <div
                                 onClick={() => setExpandedCategory(isExpanded && searchTerm.length === 0 ? null : cat.id)}
-                                className="group cursor-pointer mb-8"
+                                className="p-8 flex items-center justify-between cursor-pointer active:bg-white/5"
                             >
-                                <div className="flex items-end justify-between border-b border-white/10 pb-4 group-hover:border-emerald-500/30 transition-colors">
-                                    <div>
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <div className="h-px w-8 bg-emerald-500"></div>
-                                            <span className="text-[10px] font-black text-emerald-400 tracking-[0.4em] uppercase">Category</span>
-                                        </div>
-                                        <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter font-['Outfit'] text-white group-hover:text-emerald-400 transition-colors">
-                                            {cat.name}
-                                        </h2>
-                                    </div>
-                                    <div className="text-right flex flex-col items-end">
-                                        <div className={`p-4 rounded-2xl bg-white/5 border border-white/10 transition-all duration-500 ${isExpanded ? 'rotate-180 bg-emerald-500/20 border-emerald-500/50 shadow-[0_0_20px_rgba(16,185,129,0.2)]' : ''}`}>
-                                            <ArrowRight className="w-6 h-6 rotate-90" />
-                                        </div>
-                                        <p className="text-white/30 text-xs font-bold mt-2 tracking-widest uppercase">{sortedCandidates.length} Candidates</p>
-                                    </div>
+                                <div>
+                                    <span className="text-xs font-bold text-emerald-400 tracking-widest uppercase mb-1 block">GIẢI THƯỞNG</span>
+                                    <h2 className="text-2xl md:text-3xl font-black uppercase italic tracking-wide text-white">{cat.name}</h2>
+                                    <p className="text-white/40 text-sm mt-1">{sortedCandidates.length} Ứng cử viên</p>
+                                </div>
+                                <div className={`p-4 rounded-full bg-white/10 transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-emerald-500/20 text-emerald-400' : 'text-white/60'}`}>
+                                    <ArrowRight className="w-7 h-7 rotate-90" />
                                 </div>
                             </div>
 
@@ -250,98 +229,82 @@ export function Home() {
                                         initial={{ height: 0, opacity: 0 }}
                                         animate={{ height: "auto", opacity: 1 }}
                                         exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                                        transition={{ duration: 0.3 }}
                                         className="overflow-hidden"
                                     >
-                                        <div className={`grid gap-4 pt-4 ${!votingOpen ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
-                                            {sortedCandidates.map((cand, idx) => {
-                                                const isWinner = !votingOpen && winners[cat.id] === cand.id
-                                                const isSelected = currentVotes[cat.id] === cand.id
+                                        <div className="p-8 pt-0 border-t border-white/5">
+                                            <div className={`grid gap-4 pt-6 ${!votingOpen ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+                                                {sortedCandidates.map((cand) => {
+                                                    const isWinner = !votingOpen && winners[cat.id] === cand.id
+                                                    const isSelected = currentVotes[cat.id] === cand.id
 
-                                                return (
-                                                    <motion.div
-                                                        layoutId={`card-${cand.id}-${cat.id}`}
-                                                        key={cand.id}
-                                                        initial={{ opacity: 0, y: 20 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        transition={{ delay: idx * 0.05 }}
-                                                        whileHover={{ y: -5, scale: 1.02 }}
-                                                        whileTap={{ scale: 0.98 }}
-                                                        onClick={() => {
-                                                            if (!votingOpen) return
-                                                            setSelectedCandidate({ ...cand, category_id: cat.id })
-                                                        }}
-                                                        className={`relative group p-4 rounded-2xl border backdrop-blur-md transition-all duration-500 flex items-center gap-4 ${isWinner
-                                                                ? 'bg-gradient-to-br from-yellow-500/20 via-orange-500/10 to-transparent border-yellow-500/50 shadow-[0_10px_40px_rgba(234,179,8,0.2)] order-first md:col-span-2 py-8 px-8'
-                                                                : isSelected
-                                                                    ? 'bg-emerald-500/10 border-emerald-500 shadow-[0_0_25px_rgba(16,185,129,0.2)]'
-                                                                    : 'bg-white/5 border-white/5 hover:border-white/20'
-                                                            }`}
-                                                    >
-                                                        {/* Avatar Section */}
-                                                        <div className="relative shrink-0">
-                                                            <div className={`relative rounded-2xl overflow-hidden bg-black/40 border-2 transition-all duration-500 ${isWinner ? 'w-24 h-24 rotate-3' : 'w-14 h-14 ' + (isSelected ? 'border-emerald-500' : 'border-white/10')}`}>
-                                                                <img
-                                                                    src={cand.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${cand.name}`}
-                                                                    className="w-full h-full object-cover"
-                                                                    alt={cand.name}
-                                                                />
-                                                                {isWinner && <div className="absolute inset-0 bg-gradient-to-t from-yellow-500/20 to-transparent" />}
-                                                            </div>
-                                                            {isSelected && (
-                                                                <motion.div
-                                                                    initial={{ scale: 0 }}
-                                                                    animate={{ scale: 1 }}
-                                                                    className="absolute -top-2 -right-2 bg-emerald-500 text-black rounded-lg p-1 shadow-2xl border-2 border-[#121212]"
-                                                                >
-                                                                    <Check size={14} strokeWidth={4} />
-                                                                </motion.div>
-                                                            )}
-                                                            {isWinner && (
-                                                                <div className="absolute -bottom-3 -left-3 bg-yellow-500 text-black text-[10px] font-black px-3 py-1 rounded-full shadow-2xl border-2 border-black -rotate-12">
-                                                                    WINNER
+                                                    return (
+                                                        <motion.div
+                                                            layoutId={`card-${cand.id}-${cat.id}`}
+                                                            key={cand.id}
+                                                            whileHover={{ y: -5, scale: 1.02 }}
+                                                            whileTap={{ scale: 0.98 }}
+                                                            onClick={() => {
+                                                                if (!votingOpen) return
+                                                                setSelectedCandidate({ ...cand, category_id: cat.id })
+                                                            }}
+                                                            className={`relative group cursor-pointer overflow-hidden rounded-2xl border transition-all duration-300 flex items-center p-4 gap-4 ${isWinner
+                                                                    ? 'bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/50 shadow-[0_0_30px_rgba(234,179,8,0.3)] order-first'
+                                                                    : isSelected
+                                                                        ? 'bg-emerald-500/10 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
+                                                                        : 'bg-black/20 border-white/5 hover:border-emerald-500/30'
+                                                                }`}
+                                                        >
+                                                            <div className="relative shrink-0">
+                                                                <div className={`rounded-full overflow-hidden bg-black/30 border-2 ${isWinner ? 'w-16 h-16 border-yellow-500' : 'w-14 h-14 ' + (isSelected ? 'border-emerald-500' : 'border-white/10')}`}>
+                                                                    <img
+                                                                        src={cand.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${cand.name}`}
+                                                                        className="w-full h-full object-cover"
+                                                                        alt={cand.name}
+                                                                    />
                                                                 </div>
-                                                            )}
-                                                        </div>
-
-                                                        {/* Text Info */}
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-start justify-between gap-2">
-                                                                <div>
-                                                                    <h3 className={`font-black uppercase italic font-['Outfit'] truncate tracking-tight transition-colors ${isWinner ? 'text-3xl text-yellow-500' : isSelected ? 'text-xl text-emerald-400' : 'text-lg text-white'}`}>
-                                                                        {cand.name}
-                                                                    </h3>
-                                                                    <div className="flex items-center gap-2 mt-1">
-                                                                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-black tracking-widest ${isWinner ? 'bg-yellow-500 text-black' : 'bg-white/10 text-white/50'}`}>
-                                                                            PLAYER #{cand.number}
-                                                                        </span>
+                                                                {isSelected && (
+                                                                    <div className="absolute -top-1 -right-1 bg-emerald-500 text-black rounded-full p-0.5 shadow-md border-2 border-[#121212]">
+                                                                        <Check size={12} strokeWidth={4} />
                                                                     </div>
-                                                                </div>
-
-                                                                {!votingOpen ? (
-                                                                    <div className="text-right">
-                                                                        <div className={`text-4xl font-black font-['Outfit'] drop-shadow-lg ${isWinner ? 'text-yellow-400' : 'text-white/20'}`}>
-                                                                            {voteStats[cand.id] || 0}
-                                                                        </div>
-                                                                        <p className="text-[8px] font-bold text-white/20 uppercase tracking-widest">Votes</p>
-                                                                    </div>
-                                                                ) : (
-                                                                    <div className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all duration-300 ${isSelected ? 'bg-emerald-500 border-emerald-500 rotate-12 scale-110 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'border-white/10 p-2 group-hover:border-emerald-500/50'}`}>
-                                                                        {isSelected ? <Check size={18} className="text-black" strokeWidth={3} /> : <div className="w-1.5 h-1.5 rounded-full bg-white/10" />}
+                                                                )}
+                                                                {isWinner && (
+                                                                    <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-black text-[8px] font-black px-1.5 py-0.5 rounded-tl shadow-sm">
+                                                                        WINNER
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                        </div>
 
-                                                        {/* Winner Particle Effect Overlay */}
-                                                        {isWinner && (
-                                                            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl opacity-50">
-                                                                <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-500/20 blur-3xl -translate-y-1/2 translate-x-1/2" />
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="flex items-center justify-between gap-2">
+                                                                    <div>
+                                                                        <h3 className={`font-bold leading-tight truncate ${isWinner ? 'text-yellow-400 text-xl' : isSelected ? 'text-emerald-400 text-lg' : 'text-white text-lg'}`}>
+                                                                            {cand.name}
+                                                                        </h3>
+                                                                        <div className="flex items-center gap-2 mt-1">
+                                                                            <span className={`px-2 py-0.5 rounded text-[10px] font-black ${isWinner ? 'bg-yellow-500 text-black' : 'bg-white/10 text-white/60'}`}>
+                                                                                #{cand.number}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {!votingOpen ? (
+                                                                        <div className="text-right">
+                                                                            <div className={`text-2xl font-black ${isWinner ? 'text-yellow-400' : 'text-white/20'}`}>
+                                                                                {voteStats[cand.id] || 0}
+                                                                            </div>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-emerald-500 border-emerald-500' : 'border-white/20 group-hover:border-emerald-500/50'}`}>
+                                                                            {isSelected && <Check size={16} className="text-black" strokeWidth={3} />}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                        )}
-                                                    </motion.div>
-                                                )
-                                            })}
+                                                        </motion.div>
+                                                    )
+                                                })}
+                                            </div>
                                         </div>
                                     </motion.div>
                                 )}
@@ -351,103 +314,81 @@ export function Home() {
                 })}
             </div>
 
-            {/* Premium Vote Modal */}
             <AnimatePresence>
                 {selectedCandidate && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setSelectedCandidate(null)}
-                            className="absolute inset-0 bg-black/90 backdrop-blur-xl"
-                        />
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            className="w-full max-w-md bg-[#0a0a0a] rounded-[2.5rem] p-8 border border-white/10 relative shadow-[0_20px_100px_rgba(0,0,0,0.8)] overflow-hidden"
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="w-full max-w-sm bg-[#1a1a1a] rounded-3xl p-8 border border-white/10 relative shadow-2xl"
                         >
-                            {/* Modal Background Glow */}
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[200px] h-[200px] bg-emerald-500/20 blur-[100px] pointer-events-none" />
-
-                            <button onClick={() => setSelectedCandidate(null)} className="absolute top-6 right-6 text-white/40 hover:text-white p-2 hover:bg-white/5 rounded-full transition-all">
+                            <button onClick={() => setSelectedCandidate(null)} className="absolute top-6 right-6 text-white/50 hover:text-white p-2">
                                 <X size={24} />
                             </button>
 
-                            <div className="text-center mb-8 relative">
-                                <motion.div
-                                    initial={{ y: 20, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    className="w-28 h-28 rounded-3xl mx-auto mb-6 p-1 bg-gradient-to-br from-emerald-500 to-blue-600 shadow-2xl rotate-3"
-                                >
-                                    <div className="w-full h-full rounded-2xl overflow-hidden bg-black">
-                                        <img
-                                            src={selectedCandidate.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedCandidate.name}`}
-                                            className="w-full h-full object-cover"
-                                            alt={selectedCandidate.name}
-                                        />
-                                    </div>
-                                </motion.div>
-                                <h3 className="text-4xl font-black uppercase italic font-['Outfit'] text-white mb-2 leading-none">{selectedCandidate.name}</h3>
-                                <p className="text-emerald-400 font-black tracking-[0.3em] uppercase text-xs">Squad Number #{selectedCandidate.number}</p>
+                            <div className="text-center mb-8">
+                                <div className="w-24 h-24 rounded-full mx-auto mb-4 border-4 border-emerald-500/20 overflow-hidden bg-black/50">
+                                    <img
+                                        src={selectedCandidate.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedCandidate.name}`}
+                                        className="w-full h-full object-cover"
+                                        alt={selectedCandidate.name}
+                                    />
+                                </div>
+                                <h3 className="text-3xl font-black uppercase italic text-white mb-1">{selectedCandidate.name}</h3>
+                                <p className="text-emerald-400 font-bold text-lg">#{selectedCandidate.number}</p>
                             </div>
 
-                            <div className="space-y-6 relative">
-                                <div className="space-y-3">
-                                    <label className="block text-[10px] font-black text-white/40 uppercase tracking-[0.2em] ml-2">Identified Voter Name</label>
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-white/40 uppercase mb-2 ml-1">Tên người bầu chọn</label>
                                     <input
                                         type="text"
-                                        placeholder="Enter your name..."
+                                        placeholder="Nhập tên của bạn..."
                                         value={voterName}
                                         onChange={(e) => setVoterName(e.target.value)}
-                                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-white placeholder:text-white/10 focus:outline-none focus:border-emerald-500/50 transition-all font-bold text-lg"
+                                        className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-500 transition-colors"
                                     />
                                 </div>
 
                                 <button
                                     onClick={handleVote}
                                     disabled={!voterName.trim() || loading}
-                                    className="w-full relative group h-20 overflow-hidden rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+                                    className="w-full bg-emerald-500 text-black font-black py-5 rounded-2xl hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] flex items-center justify-center gap-2"
                                 >
-                                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-blue-600 transition-transform group-hover:scale-105" />
-                                    <div className="relative flex items-center justify-center gap-3 text-black font-black uppercase tracking-tighter text-xl italic font-['Outfit']">
-                                        {loading ? "Transmitting..." : (currentVotes[selectedCandidate.category_id] ? 'Update Vote' : 'Confirm Selection')}
-                                        {!loading && <ArrowRight size={24} strokeWidth={3} />}
-                                    </div>
+                                    {loading ? "Processing..." : (currentVotes[selectedCandidate.category_id] ? 'THAY ĐỔI BÌNH CHỌN' : 'XÁC NHẬN BÌNH CHỌN')}
+                                    {!loading && <ArrowRight size={20} strokeWidth={3} />}
                                 </button>
-
-                                <p className="text-center text-[10px] text-white/20 font-black tracking-widest uppercase">Secured by Wecat Choice System</p>
+                                <p className="text-center text-[10px] text-white/30 font-medium">Hệ thống sẽ lưu tên của bạn cho lần sau.</p>
                             </div>
                         </motion.div>
                     </div>
                 )}
             </AnimatePresence>
 
-            {/* Notification Popup */}
             <AnimatePresence>
                 {notification && (
                     <motion.div
                         initial={{ opacity: 0, y: 50, scale: 0.9 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 50, scale: 0.9 }}
-                        className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-4 px-8 py-5 rounded-[2rem] shadow-[0_30px_60px_rgba(0,0,0,0.5)] backdrop-blur-3xl border border-white/10"
+                        className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-4 px-8 py-5 rounded-2xl shadow-2xl backdrop-blur-xl border border-white/10"
                         style={{
                             background: notification.type === 'success'
-                                ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(4, 120, 87, 0.9))'
-                                : 'linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(185, 28, 28, 0.9))'
+                                ? 'linear-gradient(to right, rgba(16, 185, 129, 0.9), rgba(6, 95, 70, 0.9))'
+                                : 'linear-gradient(to right, rgba(239, 68, 68, 0.9), rgba(153, 27, 27, 0.9))'
                         }}
                     >
-                        <div className="p-3 bg-white/20 rounded-2xl">
+                        <div className={`p-2 rounded-full ${notification.type === 'success' ? 'bg-white/20' : 'bg-white/10'}`}>
                             {notification.type === 'success' ? <Trophy size={24} className="text-white" /> : <X size={24} className="text-white" />}
                         </div>
                         <div>
-                            <h4 className="font-black text-white text-xl font-['Outfit'] leading-tight uppercase italic">
-                                {notification.type === 'success' ? 'Synchronized!' : 'Alert!'}
+                            <h4 className="font-bold text-white text-lg leading-tight">
+                                {notification.type === 'success' ? 'Thành công!' : 'Lỗi!'}
                             </h4>
-                            <p className="text-white/80 text-sm font-bold tracking-tight">{notification.message}</p>
+                            <p className="text-white/80 text-sm font-medium">{notification.message}</p>
                         </div>
-                        <button onClick={() => setNotification(null)} className="ml-4 p-2 hover:bg-white/10 rounded-full transition-colors">
+                        <button onClick={() => setNotification(null)} className="ml-4 p-1 hover:bg-white/10 rounded-full transition-colors">
                             <X size={20} className="text-white/60" />
                         </button>
                     </motion.div>
