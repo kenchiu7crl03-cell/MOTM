@@ -183,7 +183,7 @@ export function Home() {
 
             {/* Categories */}
             <div className="max-w-5xl mx-auto space-y-16 relative z-10 px-4">
-                {categories.map((cat, idx) => {
+                {categories.map((cat) => {
                     // Filter candidates based on search
                     const filteredCandidates = candidates.filter(c =>
                         c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -207,7 +207,7 @@ export function Home() {
 
                             {/* Candidates Grid/List */}
                             <div className={`grid gap-4 ${!votingOpen ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
-                                {sortedCandidates.map((cand, index) => {
+                                {sortedCandidates.map((cand) => {
                                     const isWinner = !votingOpen && winners[cat.id] === cand.id
 
                                     return (
