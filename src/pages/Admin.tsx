@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import {
     Shield, LogOut, Plus, Trash2,
     Activity, RefreshCw, AlertTriangle, Trophy
