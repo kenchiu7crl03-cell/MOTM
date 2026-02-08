@@ -26,6 +26,15 @@ export function Home() {
     const [loading, setLoading] = useState(false)
     const [votingOpen, setVotingOpen] = useState(true)
 
+    // Device ID Management
+    useEffect(() => {
+        let deviceId = localStorage.getItem('deviceId')
+        if (!deviceId) {
+            deviceId = crypto.randomUUID()
+            localStorage.setItem('deviceId', deviceId)
+        }
+    }, [])
+
     useEffect(() => {
         fetchData()
 
@@ -61,34 +70,24 @@ export function Home() {
 
         setLoading(true)
         try {
-            // 1. Check if name already voted for this category
-            const { data: existingVote } = await supabase
-                .from('votes')
-                .select('id')
-                .eq('voter_name', voterName.trim())
-                .eq('category_id', selectedCandidate.category_id)
-                .single()
+            const deviceId = localStorage.getItem('deviceId')
+            if (!deviceId) throw new Error("Lỗi thiết bị. Vui lòng thử lại!")
 
-            if (existingVote) {
-                throw new Error(`Bạn (${voterName}) đã bình chọn cho giải này rồi!`)
-            }
-
-            // 2. Insert vote
-            const { error } = await supabase.from('votes').insert({
+            // Upsert vote based on device_id and category_id
+            // This will update the existing vote if user changes their mind
+            const { error } = await supabase.from('votes').upsert({
                 voter_name: voterName.trim(),
                 candidate_id: selectedCandidate.id,
-                category_id: selectedCandidate.category_id
-            })
+                category_id: selectedCandidate.category_id,
+                device_id: deviceId
+            }, { onConflict: 'device_id, category_id' })
 
-            if (error) {
-                if (error.code === '23505') throw new Error('Bạn đã bình chọn cho giải này rồi!')
-                throw error
-            }
+            if (error) throw error
 
             localStorage.setItem('voterName', voterName.trim())
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#10b981', '#3b82f6'] })
             setSelectedCandidate(null)
-            alert(`Đã bình chọn cho ${selectedCandidate.name} thành công!`)
+            alert(`Đã gửi bình chọn cho ${selectedCandidate.name}!`)
         } catch (error: any) {
             alert(error.message || "Lỗi khi bình chọn")
         } finally {
