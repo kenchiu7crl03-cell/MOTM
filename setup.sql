@@ -1,27 +1,29 @@
--- 1. Add device_id column if it doesn't exist (you might need to run this manually if table exists)
--- alter table "public"."votes" add column if not exists "device_id" text;
+-- 1. Ensure Device ID constraint exists (Run this just in case)
+alter table "public"."votes" drop constraint if exists "votes_device_id_category_id_key";
+alter table "public"."votes" add constraint "votes_device_id_category_id_key" unique ("device_id", "category_id");
 
--- 2. Add unique constraint to prevent multiple votes per device per category
--- alter table "public"."votes" add constraint "votes_device_id_category_id_key" unique ("device_id", "category_id");
+-- 2. Create a secure view/function to count votes per candidate per category
+-- This allows the frontend to fetch "Results" without needing access to individual vote rows
+create or replace view "public"."vote_stats" as
+select 
+  category_id,
+  candidate_id,
+  count(*) as vote_count
+from "public"."votes"
+group by category_id, candidate_id;
 
--- Policies
+-- 3. Update Policies
 alter table "public"."votes" enable row level security;
-alter table "public"."candidates" enable row level security;
-alter table "public"."categories" enable row level security;
-alter table "public"."config" enable row level security;
 
--- Public access
-create policy "Public can view candidates" on "public"."candidates" for select using (true);
-create policy "Public can view categories" on "public"."categories" for select using (true);
-create policy "Public can view config" on "public"."config" for select using (true);
+-- Public can VIEW limits
+-- Everyone can view candidates/categories/config
+create policy "Public view basics" on "public"."votes" for select using (false); -- Hide raw votes from public
+create policy "Public insert own vote" on "public"."votes" for insert with check (true);
+create policy "Public update own vote" on "public"."votes" for update using (true); -- Allow upsert based on device_id
 
--- Allow public to INSERT and UPDATE votes (Upsert requires Update permission)
-create policy "Public can insert votes" on "public"."votes" for insert with check (true);
-create policy "Public can update votes" on "public"."votes" for update using (true);
-create policy "Public can view votes" on "public"."votes" for select using (true);
+-- Admin policies
+create policy "Admin full access" on "public"."votes" for all using (auth.role() = 'authenticated');
+create policy "Admin view stats" on "public"."vote_stats" for select using (true); -- Only admin or public depending on logic (we handle logic in app)
 
--- Admin access (full control)
-create policy "Admins can do everything on candidates" on "public"."candidates" for all using (auth.role() = 'authenticated');
-create policy "Admins can do everything on categories" on "public"."categories" for all using (auth.role() = 'authenticated');
-create policy "Admins can do everything on config" on "public"."config" for all using (auth.role() = 'authenticated');
-create policy "Admins can do everything on votes" on "public"."votes" for all using (auth.role() = 'authenticated');
+-- Clean up helper to let public read stats (Only when needed, controlled by App Logic)
+grant select on "public"."vote_stats" to anon, authenticated;
