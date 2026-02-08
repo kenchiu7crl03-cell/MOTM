@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { motion } from 'framer-motion'
 import {
-    Shield, LogOut, Plus, Trash2,
-    Activity, RefreshCw, AlertTriangle, Trophy
+    Shield, LogOut, Plus, Trash2, Edit2,
+    Activity, RefreshCw, AlertTriangle, Trophy, X
 } from 'lucide-react'
 
 // --- Components ---
@@ -104,6 +104,9 @@ export function Admin() {
     const [showAddCand, setShowAddCand] = useState(false)
     const [newCand, setNewCand] = useState({ name: '', number: '', avatar_url: '' })
 
+    // Edit State
+    const [editingCand, setEditingCand] = useState<any>(null)
+
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
             setSession(session)
@@ -169,6 +172,20 @@ export function Admin() {
         if (!error) {
             setNewCand({ name: '', number: '', avatar_url: '' })
             setShowAddCand(false)
+            fetchData()
+        }
+    }
+
+    const handleUpdateCandidate = async () => {
+        if (!editingCand || !editingCand.name || !editingCand.number) return
+        const { error } = await supabase.from('candidates').update({
+            name: editingCand.name,
+            number: parseInt(editingCand.number),
+            avatar_url: editingCand.avatar_url || null
+        }).eq('id', editingCand.id)
+
+        if (!error) {
+            setEditingCand(null)
             fetchData()
         }
     }
@@ -300,6 +317,40 @@ export function Admin() {
                             </div>
                         )}
 
+                        {/* Edit Candidate Modal */}
+                        {editingCand && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                                <div className="w-full max-w-sm bg-[#1a1a1a] rounded-2xl p-6 border border-white/10 relative">
+                                    <button onClick={() => setEditingCand(null)} className="absolute top-4 right-4 text-white/50 hover:text-white"><X size={20} /></button>
+                                    <h3 className="text-xl font-bold mb-4">Edit Player</h3>
+                                    <div className="space-y-3">
+                                        <input
+                                            value={editingCand.name}
+                                            onChange={e => setEditingCand({ ...editingCand, name: e.target.value })}
+                                            className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-emerald-500"
+                                            placeholder="Player Name"
+                                        />
+                                        <div className="flex gap-3">
+                                            <input
+                                                type="number"
+                                                value={editingCand.number}
+                                                onChange={e => setEditingCand({ ...editingCand, number: e.target.value })}
+                                                className="w-24 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-emerald-500"
+                                                placeholder="Num"
+                                            />
+                                            <input
+                                                value={editingCand.avatar_url || ''}
+                                                onChange={e => setEditingCand({ ...editingCand, avatar_url: e.target.value })}
+                                                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-emerald-500"
+                                                placeholder="Avatar URL"
+                                            />
+                                        </div>
+                                        <button onClick={handleUpdateCandidate} className="w-full bg-blue-500 text-white font-bold py-2 rounded-xl hover:bg-blue-600 transition-colors">Update Player</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
                             {candidates.map(cand => (
                                 <div key={cand.id} className="group relative flex items-center gap-3 p-3 bg-white/5 border border-transparent hover:border-white/10 rounded-2xl transition-all">
@@ -311,12 +362,20 @@ export function Admin() {
                                         <h3 className="font-bold truncate">{cand.name}</h3>
                                         <p className="text-xs font-bold text-white/50">#{cand.number}</p>
                                     </div>
-                                    <button
-                                        onClick={() => handleDeleteCandidate(cand.id)}
-                                        className="absolute top-2 right-2 p-2 bg-black/50 hover:bg-red-500 text-white/50 hover:text-white rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                                    >
-                                        <Trash2 size={14} />
-                                    </button>
+                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2 bg-black/50 rounded-lg p-1">
+                                        <button
+                                            onClick={() => setEditingCand(cand)}
+                                            className="p-1.5 hover:bg-blue-500 text-white/50 hover:text-white rounded-md transition-all"
+                                        >
+                                            <Edit2 size={14} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteCandidate(cand.id)}
+                                            className="p-1.5 hover:bg-red-500 text-white/50 hover:text-white rounded-md transition-all"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
