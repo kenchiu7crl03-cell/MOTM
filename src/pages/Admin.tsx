@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-    Shield, Lock, LogOut, Plus, Trash2, Edit2,
-    BarChart, Activity, RefreshCw, AlertTriangle
+    Shield, LogOut, Plus, Trash2,
+    Activity, RefreshCw, AlertTriangle, Trophy
 } from 'lucide-react'
 
 // --- Components ---

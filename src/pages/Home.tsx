@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import confetti from 'canvas-confetti'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Trophy, AlertTriangle, ArrowRight, Check } from 'lucide-react'
+import { X, Trophy, ArrowRight } from 'lucide-react'
 
 interface Candidate {
     id: string
