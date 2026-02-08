@@ -28,6 +28,7 @@ export function Home() {
     const [searchTerm, setSearchTerm] = useState('')
     const [voteStats, setVoteStats] = useState<Record<string, number>>({}) // candidateId -> count
     const [winners, setWinners] = useState<Record<string, string>>({}) // categoryId -> candidateId (Winner)
+    const [expandedCategory, setExpandedCategory] = useState<string | null>(null) // Only allow one open at a time
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null)
 
     // Device ID Management
@@ -197,84 +198,109 @@ export function Home() {
 
                     if (sortedCandidates.length === 0) return null
 
+                    const isExpanded = expandedCategory === cat.id
+
                     return (
-                        <section key={cat.id} className="relative group">
-                            {/* Category Header */}
-                            <div className="flex items-center gap-4 mb-6 sticky top-20 z-30 transition-all bg-black/60 backdrop-blur-md p-3 rounded-xl border border-white/5 shadow-lg mx-auto max-w-fit">
-                                <span className="text-xs font-bold text-emerald-400 tracking-widest uppercase">GIẢI THƯỞNG</span>
-                                <h2 className="text-xl md:text-2xl font-black uppercase italic tracking-wide text-white">{cat.name}</h2>
+                        <section key={cat.id} className="relative group bg-white/5 border border-white/10 rounded-3xl overflow-hidden transition-all hover:border-white/20">
+                            {/* Category Header (Clickable) */}
+                            <div
+                                onClick={() => setExpandedCategory(isExpanded ? null : cat.id)}
+                                className="p-6 flex items-center justify-between cursor-pointer active:bg-white/5"
+                            >
+                                <div>
+                                    <span className="text-xs font-bold text-emerald-400 tracking-widest uppercase mb-1 block">GIẢI THƯỞNG</span>
+                                    <h2 className="text-xl md:text-2xl font-black uppercase italic tracking-wide text-white">{cat.name}</h2>
+                                    <p className="text-white/40 text-sm mt-1">{sortedCandidates.length} Ứng cử viên</p>
+                                </div>
+                                <div className={`p-3 rounded-full bg-white/10 transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-emerald-500/20 text-emerald-400' : 'text-white/60'}`}>
+                                    <ArrowRight className="w-6 h-6 rotate-90" />
+                                </div>
                             </div>
 
-                            {/* Candidates Grid/List */}
-                            <div className={`grid gap-4 ${!votingOpen ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
-                                {sortedCandidates.map((cand) => {
-                                    const isWinner = !votingOpen && winners[cat.id] === cand.id
+                            {/* Expandable Candidates List */}
+                            <AnimatePresence>
+                                {isExpanded && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="p-6 pt-0 border-t border-white/5">
+                                            {/* Search within category if needed, or just list */}
+                                            <div className={`grid gap-3 pt-4 ${!votingOpen ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+                                                {sortedCandidates.map((cand) => {
+                                                    const isWinner = !votingOpen && winners[cat.id] === cand.id
 
-                                    return (
-                                        <motion.div
-                                            layoutId={`card-${cand.id}-${cat.id}`} // Unique ID per category instance
-                                            key={cand.id}
-                                            whileHover={{ y: -2, scale: 1.01 }}
-                                            whileTap={{ scale: 0.99 }}
-                                            onClick={() => {
-                                                if (!votingOpen) return
-                                                setSelectedCandidate({ ...cand, category_id: cat.id })
-                                            }}
-                                            className={`
-                    relative group cursor-pointer overflow-hidden rounded-2xl
-                    bg-white/5 border
-                    ${isWinner ? 'border-yellow-500/50 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 shadow-[0_0_30px_rgba(234,179,8,0.3)] order-first' : 'border-white/10 hover:border-emerald-500/30'}
-                    transition-all duration-200
-                    flex items-center p-3 gap-4
-                  `}
-                                        >
-                                            {/* Avatar Side */}
-                                            <div className={`relative shrink-0 ${isWinner ? 'w-20 h-20' : 'w-16 h-16'} rounded-full overflow-hidden bg-black/30 border-2 ${isWinner ? 'border-yellow-500' : 'border-white/10'}`}>
-                                                <img
-                                                    src={cand.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${cand.name}`}
-                                                    className="w-full h-full object-cover"
-                                                    alt={cand.name}
-                                                />
-                                                {isWinner && (
-                                                    <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-black text-[10px] font-black px-2 py-0.5 rounded-tl-lg shadow-sm">
-                                                        WINNER
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Info Side */}
-                                            <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                                <div className="flex items-center justify-between">
-                                                    <div>
-                                                        <h3 className={`font-bold leading-tight truncate ${isWinner ? 'text-yellow-400 text-lg' : 'text-white text-base'}`}>
-                                                            {cand.name}
-                                                        </h3>
-                                                        <div className="flex items-center gap-2 mt-0.5">
-                                                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-black ${isWinner ? 'bg-yellow-500 text-black' : 'bg-white/10 text-white/60'}`}>
-                                                                #{cand.number}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Right Action: Vote Button or Result */}
-                                                    {!votingOpen ? (
-                                                        <div className="text-right">
-                                                            <div className={`text-2xl font-black ${isWinner ? 'text-yellow-400' : 'text-white/20'}`}>
-                                                                {voteStats[cand.id] || 0}
+                                                    return (
+                                                        <motion.div
+                                                            layoutId={`card-${cand.id}-${cat.id}`}
+                                                            key={cand.id}
+                                                            whileHover={{ y: -2, scale: 1.01 }}
+                                                            whileTap={{ scale: 0.99 }}
+                                                            onClick={() => {
+                                                                if (!votingOpen) return
+                                                                setSelectedCandidate({ ...cand, category_id: cat.id })
+                                                            }}
+                                                            className={`
+                                                                relative group cursor-pointer overflow-hidden rounded-xl 
+                                                                bg-black/20 border 
+                                                                ${isWinner ? 'border-yellow-500/50 bg-gradient-to-br from-yellow-500/10 to-orange-500/10 shadow-[0_0_30px_rgba(234,179,8,0.3)] order-first' : 'border-white/5 hover:border-emerald-500/30'}
+                                                                transition-all duration-200
+                                                                flex items-center p-3 gap-3
+                                                            `}
+                                                        >
+                                                            {/* Avatar Side */}
+                                                            <div className={`relative shrink-0 ${isWinner ? 'w-16 h-16' : 'w-12 h-12'} rounded-full overflow-hidden bg-black/30 border-2 ${isWinner ? 'border-yellow-500' : 'border-white/10'}`}>
+                                                                <img
+                                                                    src={cand.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${cand.name}`}
+                                                                    className="w-full h-full object-cover"
+                                                                    alt={cand.name}
+                                                                />
+                                                                {isWinner && (
+                                                                    <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-black text-[8px] font-black px-1.5 py-0.5 rounded-tl shadow-sm">
+                                                                        WIN
+                                                                    </div>
+                                                                )}
                                                             </div>
-                                                            <div className="text-[10px] uppercase font-bold text-white/30">Phiếu bầu</div>
-                                                        </div>
-                                                    ) : (
-                                                        <button className="bg-emerald-500 text-black p-2 rounded-full hover:bg-emerald-400 transition-colors shadow-lg active:scale-90">
-                                                            <ArrowRight size={20} />
-                                                        </button>
-                                                    )}
-                                                </div>
+
+                                                            {/* Info Side */}
+                                                            <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                                <div className="flex items-center justify-between">
+                                                                    <div>
+                                                                        <h3 className={`font-bold leading-tight truncate ${isWinner ? 'text-yellow-400 text-base' : 'text-white text-sm'}`}>
+                                                                            {cand.name}
+                                                                        </h3>
+                                                                        <div className="flex items-center gap-2 mt-0.5">
+                                                                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-black ${isWinner ? 'bg-yellow-500 text-black' : 'bg-white/10 text-white/60'}`}>
+                                                                                #{cand.number}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    {/* Right Action */}
+                                                                    {!votingOpen ? (
+                                                                        <div className="text-right">
+                                                                            <div className={`text-xl font-black ${isWinner ? 'text-yellow-400' : 'text-white/20'}`}>
+                                                                                {voteStats[cand.id] || 0}
+                                                                            </div>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <button className="bg-white/5 text-white/50 p-2 rounded-full hover:bg-emerald-500 hover:text-black transition-colors">
+                                                                            <ArrowRight size={16} />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </motion.div>
+                                                    )
+                                                })}
                                             </div>
-                                        </motion.div>
-                                    )
-                                })}
-                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </section>
                     )
                 })}
