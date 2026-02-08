@@ -2,18 +2,17 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
+export const runtime = 'edge'
+
 export async function POST(request: Request) {
     const supabase = await createClient()
 
-    // Check if a user's session exists
-    const {
-        data: { session },
-    } = await supabase.auth.getSession()
+    const { error } = await supabase.auth.signOut()
 
-    if (session) {
-        await supabase.auth.signOut()
+    if (error) {
+        redirect('/error')
     }
 
     revalidatePath('/', 'layout')
-    redirect('/login')
+    redirect('/')
 }
