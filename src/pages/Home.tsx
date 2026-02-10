@@ -142,10 +142,23 @@ export function Home() {
         try {
             const deviceId = localStorage.getItem('deviceId')
             if (!deviceId) throw new Error("Lỗi thiết bị. Vui lòng thử lại!")
-            localStorage.setItem('voterName', voterName.trim())
+            const trimmedName = voterName.trim()
+            localStorage.setItem('voterName', trimmedName)
+
+            // Kiểm tra xem tên này đã được dùng để vote cho giải này chưa
+            const { data: existingVote } = await supabase
+                .from('votes')
+                .select('device_id')
+                .eq('voter_name', trimmedName)
+                .eq('category_id', selectedCandidate.category_id)
+                .maybeSingle()
+
+            if (existingVote && existingVote.device_id !== deviceId) {
+                throw new Error("Bạn đã bình chọn cho giải này rồi!")
+            }
 
             const { error } = await supabase.from('votes').upsert({
-                voter_name: voterName.trim(),
+                voter_name: trimmedName,
                 candidate_id: selectedCandidate.id,
                 category_id: selectedCandidate.category_id,
                 device_id: deviceId
