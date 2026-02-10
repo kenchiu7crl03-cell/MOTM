@@ -36,52 +36,55 @@ export function Home() {
     useEffect(() => {
         const checkIncognito = async () => {
             let incognito = false;
-            const n = navigator as any;
-
-            // 1. Check Chrome & Chromium
-            if (n.storage && n.storage.estimate) {
-                const { quota } = await n.storage.estimate();
-                if (quota && quota < 120000000) incognito = true;
-            }
-
-            // 2. Check ServiceWorker (thường bị chặn trong ẩn danh)
-            if (!incognito && 'serviceWorker' in navigator === false) {
-                incognito = true;
-            }
-
-            // 3. Check Filesystem API
-            if (!incognito) {
-                const fs = (window as any).RequestFileSystem || (window as any).webkitRequestFileSystem;
-                if (fs) {
-                    fs((window as any).TEMPORARY, 100, () => { }, () => { incognito = true; });
+            try {
+                // Check for Chrome Incognito
+                if ('storage' in navigator && 'estimate' in navigator.storage) {
+                    const { quota } = await (navigator as any).storage.estimate();
+                    if (quota && quota < 120000000) incognito = true;
                 }
+                // Check for Firefox/Safari Privacy Mode
+                if (!incognito) {
+                    const db = indexedDB.open("test");
+                    db.onsuccess = () => { indexedDB.deleteDatabase("test"); };
+                    db.onerror = () => { setIsIncognito(true); };
+                }
+            } catch (e) {
+                console.error("Incognito check failed", e);
             }
-
             setIsIncognito(incognito);
         };
         checkIncognito();
 
-        // Hardware Fingerprinting - Không dùng randomUUID nữa
-        const generateHardwareFingerprint = () => {
-            const canvas = document.createElement('canvas');
-            const gl = canvas.getContext('webgl') as any;
-            const debugInfo = gl?.getExtension('WEBGL_debug_renderer_info');
-            const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : '';
+        // Tạo ID thiết bị "Siêu cứng" kết hợp IP để chặn đa trình duyệt
+        const setupDeviceId = async () => {
+            try {
+                // 1. Lấy IP công cộng (Dùng IPify)
+                const ipRes = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipRes.json();
+                const ip = ipData.ip;
 
-            const fp = [
-                renderer, // Card màn hình
-                navigator.hardwareConcurrency, // Số nhân CPU
-                screen.colorDepth,
-                screen.width + 'x' + screen.height,
-                new Date().getTimezoneOffset(),
-                navigator.language
-            ].join('|');
+                // 2. Lấy thông số phần cứng ổn định (loại bỏRenderer vì nó thay đổi theo trình duyệt)
+                const hardwareInfo = [
+                    ip,
+                    navigator.hardwareConcurrency, // Số nhân CPU
+                    screen.width + 'x' + screen.height, // Độ phân giải
+                    new Date().getTimezoneOffset() // Múi giờ
+                ].join('|');
 
-            return btoa(unescape(encodeURIComponent(fp))).substring(0, 32);
+                // 3. Hash thành chuỗi ID cố định 32 ký tự
+                const deviceId = btoa(unescape(encodeURIComponent(hardwareInfo))).substring(0, 32);
+                localStorage.setItem('deviceId', deviceId);
+            } catch (error) {
+                // Fallback nếu lỗi lấy IP (ví dụ bị chặn)
+                const deviceId = [
+                    navigator.hardwareConcurrency,
+                    screen.width + 'x' + screen.height,
+                    new Date().getTimezoneOffset()
+                ].join('|');
+                localStorage.setItem('deviceId', btoa(unescape(encodeURIComponent(deviceId))).substring(0, 32));
+            }
         };
-
-        const deviceId = generateHardwareFingerprint();
-        localStorage.setItem('deviceId', deviceId);
+        setupDeviceId();
     }, [])
 
     useEffect(() => {
