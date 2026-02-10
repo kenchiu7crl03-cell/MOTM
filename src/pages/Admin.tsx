@@ -95,6 +95,7 @@ export function Admin() {
     // Data
     const [categories, setCategories] = useState<any[]>([])
     const [candidates, setCandidates] = useState<any[]>([])
+    const [votes, setVotes] = useState<any[]>([])
     const [isVotingActive, setIsVotingActive] = useState(true)
 
     // Modals
@@ -129,9 +130,12 @@ export function Admin() {
         const { data: cands } = await supabase.from('candidates').select('*').order('number')
         const { data: config } = await supabase.from('config').select('value').eq('key', 'voting_active').single()
 
+        const { data: voteData } = await supabase.from('votes').select('*').order('voter_name')
+
         if (cats) setCategories(cats)
         if (cands) setCandidates(cands)
         if (config) setIsVotingActive(config.value)
+        if (voteData) setVotes(voteData)
     }
 
     // --- Actions ---
@@ -382,6 +386,64 @@ export function Admin() {
                     </section>
 
                 </div>
+
+                {/* Voter List Section */}
+                <section className="bg-[#121212] border border-white/10 rounded-[32px] p-8 mt-8">
+                    <div className="flex items-center justify-between mb-8">
+                        <h2 className="text-2xl font-black italic tracking-tight flex items-center gap-3">
+                            <Activity className="text-emerald-500" /> CHI TIẾT DANH SÁCH BÌNH CHỌN
+                        </h2>
+                        <div className="text-white/40 text-sm font-bold bg-white/5 px-4 py-2 rounded-full border border-white/10">
+                            Tổng cộng: {votes.length} lượt vote
+                        </div>
+                    </div>
+
+                    <div className="grid gap-8">
+                        {categories.map(cat => {
+                            const catVotes = votes.filter(v => v.category_id === cat.id)
+                            if (catVotes.length === 0) return null
+
+                            return (
+                                <div key={cat.id} className="space-y-4">
+                                    <div className="flex items-center gap-4">
+                                        <h3 className="text-lg font-bold text-white uppercase tracking-wider">{cat.name}</h3>
+                                        <div className="h-px flex-1 bg-white/10"></div>
+                                        <span className="text-xs font-bold bg-white/5 px-3 py-1 rounded-full text-white/40">
+                                            {catVotes.length} người vote
+                                        </span>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {catVotes.map((vote, idx) => {
+                                            const candidate = candidates.find(c => c.id === vote.candidate_id)
+                                            return (
+                                                <div key={vote.id} className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center justify-between group hover:border-emerald-500/50 transition-all">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 font-bold text-xs">
+                                                            {idx + 1}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-bold text-white leading-tight">{vote.voter_name}</p>
+                                                            <p className="text-[10px] text-white/30 uppercase font-black">
+                                                                {new Date(vote.created_at).toLocaleString('vi-VN')}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-[10px] font-black text-emerald-400 uppercase">Vote cho:</p>
+                                                        <p className="text-sm font-bold text-white truncate max-w-[120px]">
+                                                            {candidate ? candidate.name : 'Unknown'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </section>
             </div>
         </div>
     )

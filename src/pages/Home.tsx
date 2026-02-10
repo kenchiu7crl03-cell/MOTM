@@ -31,8 +31,32 @@ export function Home() {
     const [winners, setWinners] = useState<Record<string, string>>({})
     const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null)
+    const [isIncognito, setIsIncognito] = useState(false)
 
     useEffect(() => {
+        // Detect Incognito Mode
+        const checkIncognito = async () => {
+            let incognito = false;
+            try {
+                const fs = (window as any).RequestFileSystem || (window as any).webkitRequestFileSystem;
+                if (!fs) {
+                    // Check quota for Chrome
+                    if (navigator.storage && navigator.storage.estimate) {
+                        const { quota } = await navigator.storage.estimate();
+                        if (quota && quota < 120000000) incognito = true;
+                    }
+                }
+                // Final check for Firefox / Safari
+                if (!incognito && (indexedDB as any).databases) {
+                    // Some browsers block indexedDB in incognito
+                }
+            } catch (e) {
+                incognito = true;
+            }
+            setIsIncognito(incognito);
+        };
+        checkIncognito();
+
         let deviceId = localStorage.getItem('deviceId')
         if (!deviceId) {
             deviceId = crypto.randomUUID()
@@ -149,6 +173,28 @@ export function Home() {
         }
     }
 
+    if (isIncognito) {
+        return (
+            <div className="min-h-screen bg-black flex items-center justify-center p-6 text-center">
+                <div className="max-w-md bg-[#121212] border border-red-500/20 rounded-[32px] p-8 shadow-2xl">
+                    <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-6 text-red-500">
+                        <X size={40} />
+                    </div>
+                    <h2 className="text-2xl font-black italic uppercase text-white mb-4">PHÁT HIỆN TRÌNH DUYỆT ẨN DANH</h2>
+                    <p className="text-white/60 mb-8 leading-relaxed">
+                        Hệ thống không cho phép bình chọn ở chế độ ẩn danh để đảm bảo tính công bằng. Vui lòng tắt chế độ ẩn danh để tiếp tục.
+                    </p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="w-full bg-white/5 hover:bg-white/10 text-white font-bold py-4 rounded-2xl border border-white/10 transition-all"
+                    >
+                        TẢI LẠI TRANG
+                    </button>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <div className="min-h-screen bg-transparent text-white font-sans selection:bg-emerald-500 selection:text-black overflow-x-hidden">
             <header className="text-center py-12 relative z-10 px-4">
@@ -249,10 +295,10 @@ export function Home() {
                                                                 setSelectedCandidate({ ...cand, category_id: cat.id })
                                                             }}
                                                             className={`relative group cursor-pointer overflow-hidden rounded-2xl border transition-all duration-300 flex items-center p-4 gap-4 ${isWinner
-                                                                    ? 'bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/50 shadow-[0_0_30px_rgba(234,179,8,0.3)] order-first'
-                                                                    : isSelected
-                                                                        ? 'bg-emerald-500/10 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
-                                                                        : 'bg-black/20 border-white/5 hover:border-emerald-500/30'
+                                                                ? 'bg-gradient-to-br from-yellow-500/10 to-orange-500/10 border-yellow-500/50 shadow-[0_0_30px_rgba(234,179,8,0.3)] order-first'
+                                                                : isSelected
+                                                                    ? 'bg-emerald-500/10 border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.2)]'
+                                                                    : 'bg-black/20 border-white/5 hover:border-emerald-500/30'
                                                                 }`}
                                                         >
                                                             <div className="relative shrink-0">
