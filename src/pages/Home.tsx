@@ -34,34 +34,54 @@ export function Home() {
     const [isIncognito, setIsIncognito] = useState(false)
 
     useEffect(() => {
-        // Detect Incognito Mode
         const checkIncognito = async () => {
             let incognito = false;
-            try {
-                const fs = (window as any).RequestFileSystem || (window as any).webkitRequestFileSystem;
-                if (!fs) {
-                    // Check quota for Chrome
-                    if (navigator.storage && navigator.storage.estimate) {
-                        const { quota } = await navigator.storage.estimate();
-                        if (quota && quota < 120000000) incognito = true;
-                    }
-                }
-                // Final check for Firefox / Safari
-                if (!incognito && (indexedDB as any).databases) {
-                    // Some browsers block indexedDB in incognito
-                }
-            } catch (e) {
+            const n = navigator as any;
+
+            // 1. Check Chrome & Chromium
+            if (n.storage && n.storage.estimate) {
+                const { quota } = await n.storage.estimate();
+                if (quota && quota < 120000000) incognito = true;
+            }
+
+            // 2. Check ServiceWorker (thường bị chặn trong ẩn danh)
+            if (!incognito && 'serviceWorker' in navigator === false) {
                 incognito = true;
             }
+
+            // 3. Check Filesystem API
+            if (!incognito) {
+                const fs = (window as any).RequestFileSystem || (window as any).webkitRequestFileSystem;
+                if (fs) {
+                    fs((window as any).TEMPORARY, 100, () => { }, () => { incognito = true; });
+                }
+            }
+
             setIsIncognito(incognito);
         };
         checkIncognito();
 
-        let deviceId = localStorage.getItem('deviceId')
-        if (!deviceId) {
-            deviceId = crypto.randomUUID()
-            localStorage.setItem('deviceId', deviceId)
-        }
+        // Hardware Fingerprinting - Không dùng randomUUID nữa
+        const generateHardwareFingerprint = () => {
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') as any;
+            const debugInfo = gl?.getExtension('WEBGL_debug_renderer_info');
+            const renderer = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : '';
+
+            const fp = [
+                renderer, // Card màn hình
+                navigator.hardwareConcurrency, // Số nhân CPU
+                screen.colorDepth,
+                screen.width + 'x' + screen.height,
+                new Date().getTimezoneOffset(),
+                navigator.language
+            ].join('|');
+
+            return btoa(unescape(encodeURIComponent(fp))).substring(0, 32);
+        };
+
+        const deviceId = generateHardwareFingerprint();
+        localStorage.setItem('deviceId', deviceId);
     }, [])
 
     useEffect(() => {
