@@ -416,14 +416,25 @@ export function Admin() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                         {catVotes.map((vote, idx) => {
                                             const candidate = candidates.find(c => c.id === vote.candidate_id)
+                                            const isDuplicate = catVotes.filter(v => v.voter_name === vote.voter_name).length > 1;
                                             return (
-                                                <div key={vote.id} className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center justify-between group hover:border-emerald-500/50 transition-all">
+                                                <div
+                                                    key={vote.id}
+                                                    className={`p-4 rounded-2xl flex items-center justify-between group transition-all border ${isDuplicate
+                                                        ? 'bg-yellow-500/10 border-yellow-500/50 hover:border-yellow-500'
+                                                        : 'bg-white/5 border-white/10 hover:border-emerald-500/50'
+                                                        }`}
+                                                >
                                                     <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500 font-bold text-xs">
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${isDuplicate ? 'bg-yellow-500/20 text-yellow-500' : 'bg-emerald-500/10 text-emerald-500'
+                                                            }`}>
                                                             {idx + 1}
                                                         </div>
                                                         <div>
-                                                            <p className="font-bold text-white leading-tight">{vote.voter_name}</p>
+                                                            <div className="flex items-center gap-2">
+                                                                <p className={`font-bold leading-tight ${isDuplicate ? 'text-yellow-400' : 'text-white'}`}>{vote.voter_name}</p>
+                                                                {isDuplicate && <AlertTriangle size={14} className="text-yellow-500" />}
+                                                            </div>
                                                             <p className="text-[10px] text-white/30 uppercase font-black">
                                                                 {new Date(vote.created_at).toLocaleString('vi-VN')}
                                                             </p>
